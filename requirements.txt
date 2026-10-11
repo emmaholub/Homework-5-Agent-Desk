@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+mcp<2
+pydantic-ai-slim[openai]

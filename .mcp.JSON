@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "campus-customs": {
+      "command": "/Users/emmaholub/Desktop/AI Foundations/Homeworks 5/.venv312/bin/python",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "/Users/emmaholub/Desktop/AI Foundations/Homeworks 5"
+    }
+  }
+}
