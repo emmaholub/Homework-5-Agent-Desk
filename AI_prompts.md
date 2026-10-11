@@ -16,7 +16,7 @@
 **What was lacking after the first prompt:** Read-only behavior and exact ticket links needed to be explicit.
 
 ## Problem 4: Connect and test MCP
-**Prompt:** Add the MCP connection JSON at the project root and call all three ticket tools. Save `output/MCP_smoke.json` with each prompt, exact tool name, and real database output.
+**Prompt:** Add the MCP connection JSON at the project root and call all three ticket tools. Save `output/mcp_smoke.json` with each prompt, exact tool name, and real database output.
 **Follow-up:** Replace stale product/user smoke examples with evidence from the three current ticket tools.
 **What was lacking after the first prompt:** The earlier smoke file did not match the current MCP server.
 

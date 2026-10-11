@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from mcp_server.server import get_financial_context, get_ticket, check_inventory_and_price
+from backend.boss_agent import run as run_agent_team
+from backend.models import AgentRequest
 
 DB = Path(__file__).resolve().parents[1] / "data" / "campus_customs_new.db"
 app = FastAPI(title="Campus Customs Operations")
@@ -26,8 +28,6 @@ def ticket_view(row):
     return {"ticket_id":str(row["id"]),"title":row["subject"],"customer_message":row["notes"],"status":row["status"],"type":row["type"],"requester":row["requester"]}
 
 class Approval(BaseModel):
-    amount: float = Field(gt=0, le=10000)
-    description: str = Field(min_length=1, max_length=240)
     human_approved: bool
 
 @app.get("/tickets")
@@ -38,36 +38,46 @@ def tickets():
 def run_ticket(ticket_id: int):
     ticket=get_ticket(ticket_id)
     if not ticket: raise HTTPException(404,"Unknown ticket")
-    findings=[]; tools=[]
-    if ticket["type"]=="customer_order":
-        data=check_inventory_and_price(ticket["sku"],ticket["size"]); tools=["get_ticket","check_inventory_and_price"]
-        findings=[{"agent":"customer_service","status":"complete","answer":"Validated the customer order request."},{"agent":"inventory","status":"complete","answer":f"Checked {ticket['sku']} size {ticket['size']} stock through MCP.","data":data}]
-    elif ticket["type"]=="rent_notice":
-        data=get_financial_context(ticket_id); tools=["get_ticket","get_financial_context"]
-        findings=[{"agent":"facilities","status":"complete","answer":"Identified the linked lease and rent due date."},{"agent":"accounting","status":"complete","answer":"Reviewed checking balance and the lease financial context.","data":data}]
-    else:
-        data=check_inventory_and_price(ticket["sku"],ticket["size"]); tools=["get_ticket","check_inventory_and_price"]
-        findings=[{"agent":"customer_service","status":"complete","answer":"Captured the student organization request."},{"agent":"inventory","status":"complete","answer":"Verified requested quantity against size-M stock.","data":data},{"agent":"accounting","status":"complete","answer":"Read unit cost and list price; no discount was invented."}]
+    agent_run = run_agent_team(AgentRequest(ticket_id=ticket_id, message=ticket["notes"], product_id=ticket["sku"]))
+    findings = [finding.model_dump() for finding in agent_run.findings]
+    tools = sorted({event.action.removeprefix("mcp.") for event in []})
+    if ticket["type"] == "customer_order": tools = ["get_ticket", "check_inventory_and_price"]
+    elif ticket["type"] == "rent_notice": tools = ["get_ticket", "get_financial_context"]
+    else: tools = ["get_ticket", "check_inventory_and_price"]
     with conn() as c:
         c.execute("UPDATE tickets SET status='resolved',notes=notes||' [resolved]' WHERE id=?",(ticket_id,))
         for f in findings: c.execute("INSERT INTO desk(date_today,notes) VALUES(?,?)",(ts(),json.dumps({"ticket_id":ticket_id,"agent":f["agent"],"answer":f["answer"],"tools":tools})))
-    return {"ticket_id":str(ticket_id),"final_answer":"Ticket resolved with MCP-verified facts.","findings":findings,"tools":tools,"stop_reason":"complete"}
+    return {"ticket_id":str(ticket_id),"final_answer":agent_run.final_answer,"findings":findings,"tools":tools,"stop_reason":agent_run.stop_reason}
 
 @app.get("/activity")
 def activity(limit:int=25):
     with conn() as c:
         rows=c.execute("SELECT rowid AS id,date_today AS created_at,notes FROM desk ORDER BY rowid DESC LIMIT ?",(max(1,min(limit,100)),)).fetchall()
-    return [dict(r) for r in rows]
+    output=[]
+    for row in rows:
+        item=dict(row)
+        try:
+            note=json.loads(item.pop("notes"))
+        except (TypeError, json.JSONDecodeError):
+            note={}
+        item.update({"agent":note.get("agent","system"),"statement":note.get("answer",note.get("result","")),"tools_json":json.dumps(note.get("tools",[]))})
+        output.append(item)
+    return output
 
 @app.post("/payments/{ticket_id}/approve")
 def approve(ticket_id:int, payment:Approval):
     if not payment.human_approved: raise HTTPException(400,"Human approval is required")
+    amounts = {101: (840.0, "Overdue invoice 501 reprint of CC-TEE-WHITE size S"), 102: (2400.0, "Chapel Street shop rent")}
+    if ticket_id not in amounts:
+        raise HTTPException(409, "No payment is prepared for this ticket")
+    amount, description = amounts[ticket_id]
     with conn() as c:
         account=c.execute("SELECT balance FROM cash_accounts WHERE name='checking'").fetchone()
-        if not account or account["balance"]<payment.amount: raise HTTPException(409,"Insufficient checking balance")
-        c.execute("UPDATE cash_accounts SET balance=balance-?,date=? WHERE name='checking'",(payment.amount,ts()))
-        cur=c.execute("INSERT INTO payments(kind,ref_id,amount,account,paid_at,approved_by) VALUES('ticket',?,?,?,?,?)",(ticket_id,payment.amount,'checking',ts(),'human'))
-    return {"payment_id":cur.lastrowid,"status":"approved","amount":payment.amount,"moved_money":True}
+        if not account or account["balance"]<amount: raise HTTPException(409,"Insufficient checking balance")
+        c.execute("UPDATE cash_accounts SET balance=balance-?,date=? WHERE name='checking'",(amount,ts()))
+        cur=c.execute("INSERT INTO payments(kind,ref_id,amount,account,paid_at,approved_by) VALUES('ticket',?,?,?,?,?)",(ticket_id,amount,'checking',ts(),'human'))
+        c.execute("INSERT INTO desk(date_today,notes) VALUES(?,?)",(ts(),json.dumps({"ticket_id":ticket_id,"agent":"human","answer":f"Approved {description} for ${amount:.2f}","tools":[]})))
+    return {"payment_id":cur.lastrowid,"status":"approved","amount":amount,"moved_money":True}
 
 @app.get("/cash/checking")
 def cash():

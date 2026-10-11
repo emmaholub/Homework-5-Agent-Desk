@@ -73,7 +73,7 @@ checking balance after a human payment approval.
 - `AI_prompts.md` records the nine HW5 prompt/follow-up sections.
 - `output/harness.md` documents tables, tools, agents, routes, dashboard, and
   safety limits.
-- `output/MCP_smoke.json` contains real outputs from all three MCP tools.
+- `output/mcp_smoke.json` contains real outputs from all three MCP tools.
 - `output/audit_trail.json` is append-only JSON Lines evidence.
 - `output/desk_tickets.html` contains Expected, Actual, Cash, and Reflection
   tabs and can be opened by double-clicking it.
