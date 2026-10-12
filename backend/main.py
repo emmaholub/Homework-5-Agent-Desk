@@ -86,6 +86,7 @@ def cash():
 @app.post("/reset")
 def reset():
     with conn() as c:
-        c.execute("UPDATE tickets SET status='open'"); c.execute("DELETE FROM payments"); c.execute("DELETE FROM desk")
+        c.execute("UPDATE tickets SET status='open', notes=replace(notes, ' [resolved]', '')")
+        c.execute("DELETE FROM payments"); c.execute("DELETE FROM desk")
         c.execute("UPDATE cash_accounts SET balance=3400.0,date='2026-08-31' WHERE name='checking'")
     return {"status":"reset","starting_balance":3400.0}
