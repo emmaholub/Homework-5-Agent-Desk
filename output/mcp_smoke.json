@@ -16,7 +16,7 @@
     {
       "prompt": "What lease and checking facts are relevant to rent ticket 102?",
       "tool_name": "get_financial_context",
-      "tool_output": {"ticket": {"id": 102, "type": "rent_notice", "requester": "Elm City Properties", "subject": "Rent due", "sku": null, "size": null, "qty": null, "lease_id": 1, "invoice_id": null, "status": "resolved", "notes": "Email: shop rent due in 2 days.", "created_at": "2026-08-31T11:05:00-04:00"}, "checking": {"name": "checking", "balance": 3400.0, "date": "2026-08-31"}, "invoice": null, "lease": {"id": 1, "space_name": "Chapel Street shop", "landlord": "Elm City Properties", "monthly_rent": 2400.0, "next_due": "2026-09-02", "notes": null}, "payments": []}
+      "tool_output": {"ticket": {"id": 102, "type": "rent_notice", "requester": "Elm City Properties", "subject": "Rent due", "sku": null, "size": null, "qty": null, "lease_id": 1, "invoice_id": null, "status": "resolved", "notes": "Email: shop rent due in 2 days.", "created_at": "2026-08-31T11:05:00-04:00"}, "checking": {"name": "checking", "balance": 160.0}, "invoice": null, "lease": {"id": 1, "space_name": "Chapel Street shop", "landlord": "Elm City Properties", "monthly_rent": 2400.0, "next_due": "2026-09-02", "notes": null}, "payments": [{"kind": "ticket", "ref_id": 102, "amount": 2400.0, "account": "checking", "approved_by": "human"}]}
     }
   ]
 }
