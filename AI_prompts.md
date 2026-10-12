@@ -45,5 +45,12 @@
 **Follow-up:** Verify the ending balance directly from `cash_accounts` and explicitly record each ticket's agents, tools, outcome, and approvals.
 **What was lacking after the first prompt:** Evidence needed direct database verification, not only dashboard text.
 
-## Problems 10–11
-No additional requirements were supplied for these HW5 problems; no prompts are fabricated here.
+## Problem 10: Reflection
+**Prompt:** Open `output/desk_tickets.html` and replace the Reflection tab with the exact reflection text I supplied. Tie every answer to this Campus Customs app and tickets 101, 102, and 103, using the ticket and Cash tabs as evidence.
+**Follow-up:** Replace the previous reflection with the new version word for word; do not paraphrase it.
+**What was lacking after the first prompt:** The first reflection version did not match the wording I wanted, so it needed to be replaced exactly.
+
+## Problem 11: Submission and final evidence
+**Prompt:** Prepare the public HW5 repository for submission. Include both database files, `.env.example` but never `.env`, the required folder layout, final `resolved_tickets.json`, `resolved_board.html`, append-only audit evidence, and three real dashboard screenshots named `ticket-101.png`, `ticket-102.png`, and `ticket-103.png`. Verify the cash sequence is $3,400 → $2,560 → $160 after human approvals for tickets 101 and 102, with no payment for 103.
+**Follow-up:** Recheck the committed database, screenshot labels, AI prompt sections, and GitHub status before I submit the repository URL.
+**What was lacking after the first prompt:** The first submission check exposed a database mismatch, mislabeled screenshots, and missing Problem 10–11 prompt sections, so the final evidence had to be regenerated and checked against the database.
